@@ -1,4 +1,5 @@
 
+#  Before running this script, you have to install all included libraries using "pip3 install <lib-name>".
 import cv2
 import numpy as np
 import mss # with mss we can recoring near to 20fps
@@ -8,55 +9,56 @@ import time
 window_name = "chrome"
 
 fourcc = cv2.VideoWriter_fourcc(*"XVID")
-fps = 20.0
-record_seconds = 60 * 60
+# init fps
+fps =20.0
 
 w = gw.getWindowsWithTitle(window_name)[0]
 w.activate()
+    # define recording area size and position
+monitor = {
+    "top": w.top,
+    "left": w.left,
+    "width": w.width,
+    "height": w.height
+}
 
 out = cv2.VideoWriter('output.avi', fourcc, fps, tuple(w.size))
 
-appTitle = "BlackSpot"
+# init app title
+appTitle = "BlackSpot" 
 
-# set the window title
-# cv2.namedWindow(appTitle)
-
-# Создаем экземпляр mss
 sct = mss.mss()
 
-
-# Начало записи
-start_time = time.time()
-
+# init start time
+startTime = time.time()
 paused = False
+#init max recording time
+maxRecordTime = 60 * 60
+counter = 0
+maxIteration = maxRecordTime * fps
 
-for i in range(int(record_seconds * fps)):
+while counter < maxIteration :
 
-    # Определяем область захвата
-    monitor = {
-        "top": w.top,
-        "left": w.left,
-        "width": w.width,
-        "height": w.height
-    }
 
     if not paused:
-        loop_start = time.time()  # Отслеживаем начало цикла
+        counter += 1
+        loop_start = time.time()
 
-        # Захват кадра через mss
+        # made screen with mss
         screenshot = sct.grab(monitor)
         frame = np.array(screenshot)
 
-        # Преобразуем цветовую схему
+        # mutate the color scema 
         frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
         out.write(frame)
         cv2.imshow(appTitle, frame)
 
-        # Расчет времени выполнения и корректировка задержки
+        # time correction
         elapsed = time.time() - loop_start
-        delay = max(1 / fps - elapsed, 0)  # Учитываем прошедшее время
+        delay = max(1 / fps - elapsed, 0) 
         time.sleep(delay)
 
+    # define control settings
     key = cv2.waitKey(1)
     if key == ord("q") or cv2.getWindowProperty(appTitle, cv2.WND_PROP_VISIBLE) < 1 :
         break
